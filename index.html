@@ -223,6 +223,17 @@ function renderTable() {
     area.innerHTML = html + `</tbody></table>`;
 }
 
+function renderTable() {
+    const t = translations[currentLang];
+    const area = document.getElementById("tableArea");
+    if(selected.length === 0) { area.innerHTML = "<p style='text-align:center; opacity:0.5;'>เลือกพนักงาน...</p>"; return; }
+    let html = `<table><thead><tr><th>Skill</th>` + selected.map(n => `<th>${n}</th>`).join('') + `</tr></thead><tbody>`;
+    skillKeys.forEach((s, idx) => {
+        html += `<tr><td style="text-align:left">${t.skills[idx]}</td>` + selected.map(n => `<td><input type="number" class="input-num" min="0" max="5" value="${empData[n].skills[s]||0}" onchange="empData['${n}'].skills['${s}']=parseFloat(this.value); update()"></td>`).join('') + `</tr>`;
+    });
+    area.innerHTML = html + `</tbody></table>`;
+}
+
 function renderAttTable() {
     const t = translations[currentLang];
     const area = document.getElementById("attTableArea");
