@@ -140,31 +140,39 @@ function toggleSelect(name) {
 
 function update() {
     const t = translations[currentLang];
+    // อัปเดตข้อความหัวข้อต่างๆ
     document.getElementById("side-title").innerText = t.sideTitle;
     document.getElementById("lbl-compare").innerText = t.compare;
+    document.getElementById("lbl-topSkill").innerText = t.topSkill;
     document.getElementById("lbl-discipline").innerText = t.discipline;
     document.getElementById("lbl-skillMatrix").innerText = t.skillMatrix;
     document.getElementById("lbl-attMatrix").innerText = t.attMatrix;
 
     const displays = document.getElementById("profileDisplays");
     if(selected.length > 0) {
+        // แก้ไข: ให้โชว์ชื่อพนักงานและข้อมูลเบื้องต้นในช่อง "เปรียบเทียบพนักงาน"
         displays.innerHTML = selected.map(n => `
-            <div style="text-align:center">
+            <div style="text-align:center; min-width:100px;">
                 <div class="profile-circle">${empData[n].img ? `<img src="${empData[n].img}">` : `<b>${empData[n].init}</b>`}</div>
-                <div style="font-size:12px; font-weight:bold">${n}</div>
+                <div style="font-size:14px; font-weight:bold; color:var(--accent-blue);">${n}</div>
+                <div style="font-size:11px; color:var(--text-secondary);">${empData[n].level} | ${empData[n].dept}</div>
             </div>`).join('');
+    } else { 
+        displays.innerHTML = `<p style="margin-top: 40px; color: var(--text-secondary);">เลือกพนักงานเพื่อดูโปรไฟล์</p>`; 
     }
 
-    const datasets = selected.map((n, i) => ({
-        label: n, 
-        data: skillKeys.map(s => empData[n].skills[s] || 0),
-        borderColor: i === 0 ? '#38bdf8' : '#fb7185', 
-        backgroundColor: i === 0 ? 'rgba(56, 189, 248, 0.4)' : 'rgba(251, 113, 133, 0.4)',
-        borderWidth: 2
+    // ส่วนของ Charts (ใช้โค้ดเดิมของคุณได้เลย)
+    const radarDatasets = selected.map((n, i) => ({
+        label: n, data: skillKeys.map(s => empData[n].skills[s] || 0),
+        borderColor: i === 0 ? '#38bdf8' : '#fb7185', backgroundColor: i === 0 ? 'rgba(56, 189, 248, 0.3)' : 'rgba(251, 113, 133, 0.3)', borderWidth: 2
     }));
-
-    radarChart.data.labels = t.skills; radarChart.data.datasets = datasets; radarChart.update();
-    barChart.data.labels = t.skills; barChart.data.datasets = datasets; barChart.update();
+    radarChart.data.labels = t.skills; radarChart.data.datasets = radarDatasets; radarChart.update();
+    
+    const barDatasets = selected.map((n, i) => ({
+        label: n, data: skillKeys.map(s => empData[n].skills[s] || 0),
+        backgroundColor: i === 0 ? '#38bdf8' : '#fb7185'
+    }));
+    barChart.data.labels = t.skills; barChart.data.datasets = barDatasets; barChart.update();
 
     butterflyChart.data.labels = t.attLabels;
     butterflyChart.data.datasets = selected.map((n, i) => ({
@@ -179,21 +187,18 @@ function update() {
 function renderTable() {
     const t = translations[currentLang];
     const area = document.getElementById("tableArea");
-    if(selected.length === 0) { area.innerHTML = "<p style='text-align:center; opacity:0.5;'>โปรดเลือกพนักงาน...</p>"; return; }
-    let html = `<table><thead><tr><th>Skill</th>` + selected.map(n => `<th>${n}</th>`).join('') + `</tr></thead><tbody>`;
+    if(selected.length === 0) { area.innerHTML = "<p style='text-align:center; opacity:0.5;'>เลือกพนักงาน...</p>"; return; }
+    
+    let html = `<table><thead><tr><th>Metric / Skill</th>` + selected.map(n => `<th>${n}</th>`).join('') + `</tr></thead><tbody>`;
+    
+    // เพิ่มแถว Department และ Level ให้แสดงในตารางตามรูปที่คุณวงไว้
+    html += `<tr><td style="text-align:left">Department (แผนก)</td>` + selected.map(n => `<td><input type="text" class="input-num" style="width:120px" value="${empData[n].dept}" oninput="empData['${n}'].dept=this.value; update();"></td>`).join('') + `</tr>`;
+    html += `<tr><td style="text-align:left">Level (ตำแหน่ง)</td>` + selected.map(n => `<td><input type="text" class="input-num" style="width:120px" value="${empData[n].level}" oninput="empData['${n}'].level=this.value; update();"></td>`).join('') + `</tr>`;
+    
+    // แถวคะแนนทักษะต่างๆ
     skillKeys.forEach((s, idx) => {
-        html += `<tr><td style="text-align:left">${t.skills[idx]}</td>` + selected.map(n => `<td class="score-val">${empData[n].skills[s]||0}</td>`).join('') + `</tr>`;
-    });
-    area.innerHTML = html + `</tbody></table>`;
-}
-
-function renderAttTable() {
-    const t = translations[currentLang];
-    const area = document.getElementById("attTableArea");
-    if(selected.length === 0) { area.innerHTML = ""; return; }
-    let html = `<table><thead><tr><th>Metric</th>` + selected.map(n => `<th>${n}</th>`).join('') + `</tr></thead><tbody>`;
-    attKeys.forEach((a, idx) => {
-        html += `<tr><td style="text-align:left">${t.attLabels[idx]}</td>` + selected.map(n => `<td class="att-val">${empData[n].att[a]||0}</td>`).join('') + `</tr>`;
+        html += `<tr><td style="text-align:left">${t.skills[idx]}</td>` + 
+        selected.map(n => `<td><input type="number" class="input-num" min="0" max="5" step="0.5" value="${empData[n].skills[s]||0}" oninput="empData['${n}'].skills['${s}']=parseFloat(this.value)||0; update();"></td>`).join('') + `</tr>`;
     });
     area.innerHTML = html + `</tbody></table>`;
 }
