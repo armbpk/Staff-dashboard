@@ -3,39 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HR Analytics - Pro Skills Portfolio</title>
+    <title>Staff Analytics - Skills Matrix</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --bg-body: #020617; --bg-card: #0f172a; --accent-blue: #38bdf8;
             --accent-green: #4ade80; --accent-rose: #fb7185; --accent-warn: #fbbf24;
+            --accent-purple: #a855f7; /* เพิ่มสีที่ 3 สำหรับพนักงานคนที่ 3 */
             --text-primary: #f8fafc; --text-secondary: #94a3b8; --border: #1e293b;
         }
         * { box-sizing: border-box; font-family: 'Inter', 'Sarabun', 'Microsoft YaHei', sans-serif; }
-        body { margin: 0; background-color: var(--bg-body); color: var(--text-primary); display: flex; height: 100vh; overflow: hidden; }
-        .sidebar { width: 320px; background: #020617; border-right: 1px solid var(--border); padding: 15px; display: flex; flex-direction: column; flex-shrink: 0; }
+        
+        body { 
+            margin: 0; 
+            background-color: var(--bg-body); 
+            color: var(--text-primary); 
+            display: flex; 
+            height: 100vh; 
+            overflow: hidden; 
+        }
+
+
+        .sidebar { 
+            width: 320px; 
+            background: #020617; 
+            border-right: 1px solid var(--border); 
+            padding: 15px; 
+            display: flex; 
+            flex-direction: column; 
+            flex-shrink: 0; 
+            height: 100%;
+        }
+
+        .main-content { 
+            flex: 1; 
+            padding: 20px; 
+            overflow-y: auto; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 20px; 
+            height: 100%;
+        }
+
         .lang-bar { display: flex; gap: 5px; margin-bottom: 10px; }
         .lang-btn { background: var(--bg-card); border: 1px solid var(--border); color: var(--text-secondary); padding: 4px 8px; border-radius: 5px; cursor: pointer; font-size: 11px; }
         .lang-btn.active { border-color: var(--accent-blue); color: var(--accent-blue); }
+        
         .emp-list-container { flex: 1; overflow-y: auto; margin: 15px 0; padding-right: 5px; }
         .emp-item { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 10px; padding: 10px; margin-bottom: 8px; cursor: pointer; transition: 0.2s; position: relative; }
         .emp-item.active { border-color: var(--accent-blue); background: rgba(56, 189, 248, 0.1); }
+        
         .edit-mode-box { background: #1e293b; padding: 10px; border-radius: 8px; margin-top: 8px; display: none; }
         .edit-mode-box input { width: 100%; background: #020617; border: 1px solid var(--border); color: white; padding: 5px; margin: 3px 0; border-radius: 4px; font-size: 12px; }
-        .main-content { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
-        .top-row { display: grid; grid-template-columns: 1fr 1.5fr 1.5fr; gap: 15px; min-height: 280px; }
-        .card { background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border); padding: 15px; position: relative; }
-        .profile-circle { width: 80px; height: 80px; border-radius: 50%; border: 3px solid var(--accent-blue); overflow: hidden; margin: 0 auto 10px; background: #000; display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; }
+        
+        .top-row { 
+            display: grid; 
+            grid-template-columns: 1fr 1.5fr 1.5fr; 
+            gap: 15px; 
+            min-height: 320px; 
+        }
+
+        .card { 
+            background: var(--bg-card); 
+            border-radius: 12px; 
+            border: 1px solid var(--border); 
+            padding: 15px; 
+            position: relative; 
+            display: flex;
+            flex-direction: column;
+        }
+
+        .profile-circle { width: 65px; height: 65px; border-radius: 50%; border: 3px solid var(--accent-blue); overflow: hidden; margin: 0 auto 5px; background: #000; display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; }
         .profile-circle img { width: 100%; height: 100%; object-fit: cover; }
-        .table-container { overflow-x: auto; }
+        
+        .table-container { overflow-x: auto; width: 100%; }
         table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 12px; text-align: center; border-bottom: 1px solid var(--border); font-size: 13px; }
-        .input-num { width: 60px; background: #020617; border: 1px solid var(--border); color: white; padding: 6px; border-radius: 5px; text-align: center; }
+        th, td { padding: 10px; text-align: center; border-bottom: 1px solid var(--border); font-size: 12px; }
+        
+        .input-num { width: 50px; background: #020617; border: 1px solid var(--border); color: white; padding: 4px; border-radius: 5px; text-align: center; }
         .btn { padding: 8px 15px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; transition: 0.2s; }
         .btn-add { background: rgba(56, 189, 248, 0.1); color: var(--accent-blue); border: 1px dashed var(--accent-blue); width: 100%; margin-bottom: 10px; }
-        .btn-save { background: var(--accent-green); color: #020617; width: 100%; }
+        .btn-save { background: var(--accent-green); color: #020617; width: 100%; margin-top: auto; }
+        
         .setting-icon { position: absolute; right: 10px; top: 10px; opacity: 0.5; transition: 0.3s; }
         .setting-icon:hover { opacity: 1; transform: rotate(45deg); }
+
+        canvas { max-height: 250px !important; width: 100% !important; }
     </style>
 </head>
 <body>
@@ -46,7 +99,7 @@
         <button class="lang-btn" onclick="setLang('cn')">CN</button>
         <button class="lang-btn" onclick="setLang('en')">EN</button>
     </div>
-    <div id="side-title" style="font-size: 1.2rem; font-weight: 800; color: var(--accent-blue); margin-bottom: 15px;">SKILLS PORTFOLIO</div>
+    <div id="side-title" style="font-size: 1.2rem; font-weight: 800; color: #FFFFFF; margin-bottom: 15px;">PQC SKILLS VIEW</div>
     <button class="btn btn-add" onclick="addEmployee()">+ เพิ่มพนักงาน</button>
     <div class="emp-list-container" id="empList"></div>
     <button class="btn btn-save" onclick="saveData()">💾 บันทึกข้อมูลทั้งหมด</button>
@@ -55,10 +108,10 @@
 <div class="main-content">
     <div class="top-row">
         <div class="card" style="text-align: center;">
-            <div id="profileDisplays" style="display:flex; justify-content:center; gap:20px; flex-wrap: wrap;">
-                <p style="margin-top: 40px; color: var(--text-secondary);">เลือกพนักงานเพื่อดูโปรไฟล์</p>
+            <div id="profileDisplays" style="display:flex; justify-content:center; gap:10px; flex-wrap: wrap; flex: 1; align-items: center;">
+                <p style="color: var(--text-secondary);">เลือกพนักงาน (สูงสุด 3 คน)</p>
             </div>
-            <h4 id="lbl-compare">เปรียบเทียบพนักงาน</h4>
+            <h4 id="lbl-compare" style="margin-top: 10px; font-size: 14px;">เปรียบเทียบพนักงาน</h4>
         </div>
         <div class="card"><canvas id="radarChart"></canvas></div>
         <div class="card"><canvas id="barChart"></canvas></div>
@@ -66,7 +119,7 @@
 
     <div style="display: grid; grid-template-columns: 1.2fr 1.8fr; gap: 15px;">
         <div class="card">
-            <h4 id="lbl-topSkill" style="color: var(--accent-rose);">🏆 Top Skills</h4>
+            <h4 id="lbl-topSkill" style="color: var(--accent-rose); margin-top: 0;">🏆 Top Skills</h4>
             <div id="rankSkillArea"></div>
             <hr style="border:0; border-top:1px solid var(--border); margin:15px 0;">
             <h4 id="lbl-discipline" style="color: var(--accent-warn);">⚖️ Discipline Comparison</h4>
@@ -91,6 +144,8 @@ let currentLang = 'th';
 let currentTargetImg = null;
 const skillKeys = ["Basic Knowledge", "Inspection Skill", "Documentation & System", "Quality Analysis", "Process Control", "Communication", "Advanced Skill"];
 const attKeys = ["Absent", "Personal Leave", "Sick Leave", "Vacation", "Late"];
+const chartColors = ['#38bdf8', '#fb7185', '#a855f7']; // ฟ้า, ชมพู, ม่วง
+const chartFills = ['rgba(56, 189, 248, 0.3)', 'rgba(251, 113, 133, 0.3)', 'rgba(168, 85, 247, 0.3)'];
 
 const translations = {
     th: { sideTitle: "พอร์ตโฟลิโอทักษะ", compare: "เปรียบเทียบพนักงาน", topSkill: "🏆 อันดับทักษะ", discipline: "⚖️ เปรียบเทียบวินัย", skillMatrix: "📊 ตารางทักษะ", attMatrix: "📅 ตารางการลงเวลา", skills: ["ความรู้พื้นฐาน", "ทักษะการตรวจ", "เอกสาร/ระบบ", "การวิเคราะห์", "คุมกระบวนการ", "สื่อสาร", "ขั้นสูง"], attLabels: ["ขาดงาน", "ลากิจ", "ลาป่วย", "พักร้อน", "มาสาย"] },
@@ -146,7 +201,17 @@ function init() {
 }
 
 function initCharts() {
-    const options = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } };
+    // ปรับ Plugins ให้โชว์ Legend (คำอธิบายสี)
+    const options = { 
+        responsive: true, 
+        maintainAspectRatio: false, 
+        plugins: { 
+            legend: { 
+                display: true, 
+                labels: { color: '#94a3b8', font: { size: 10 } } 
+            } 
+        } 
+    };
     radarChart = new Chart(document.getElementById("radarChart"), { type: 'radar', data: { labels: [], datasets: [] }, options: { ...options, scales: { r: { min: 0, max: 5, grid: { color: '#1e293b' }, ticks: { display: false } } } } });
     barChart = new Chart(document.getElementById("barChart"), { type: 'bar', data: { labels: [], datasets: [] }, options: { ...options, indexAxis: 'y', scales: { x: { min: 0, max: 5, grid: { color: '#1e293b' } } } } });
     butterflyChart = new Chart(document.getElementById("butterflyChart"), { type: 'bar', data: { labels: [], datasets: [] }, options: { ...options, indexAxis: 'y', scales: { x: { stacked: true, grid: { display: false } }, y: { stacked: true, position: 'center' } } } });
@@ -154,13 +219,12 @@ function initCharts() {
 
 function toggleSelect(name) {
     if(selected.includes(name)) selected = selected.filter(x => x !== name);
-    else if(selected.length < 2) selected.push(name);
+    else if(selected.length < 3) selected.push(name); // ปรับจาก 2 เป็น 3
     renderList(); update();
 }
 
 function update() {
     const t = translations[currentLang];
-    // อัปเดตข้อความหัวข้อต่างๆ
     document.getElementById("side-title").innerText = t.sideTitle;
     document.getElementById("lbl-compare").innerText = t.compare;
     document.getElementById("lbl-topSkill").innerText = t.topSkill;
@@ -170,34 +234,40 @@ function update() {
 
     const displays = document.getElementById("profileDisplays");
     if(selected.length > 0) {
-        // แก้ไข: ให้โชว์ชื่อพนักงานและข้อมูลเบื้องต้นในช่อง "เปรียบเทียบพนักงาน"
-        displays.innerHTML = selected.map(n => `
-            <div style="text-align:center; min-width:100px;">
-                <div class="profile-circle">${empData[n].img ? `<img src="${empData[n].img}">` : `<b>${empData[n].init}</b>`}</div>
-                <div style="font-size:14px; font-weight:bold; color:var(--accent-blue);">${n}</div>
-                <div style="font-size:11px; color:var(--text-secondary);">${empData[n].level} | ${empData[n].dept}</div>
+        displays.innerHTML = selected.map((n, i) => `
+            <div style="text-align:center; min-width:80px;">
+                <div class="profile-circle" style="border-color: ${chartColors[i]}">${empData[n].img ? `<img src="${empData[n].img}">` : `<b>${empData[n].init}</b>`}</div>
+                <div style="font-size:12px; font-weight:bold; color:${chartColors[i]};">${n}</div>
             </div>`).join('');
     } else { 
-        displays.innerHTML = `<p style="margin-top: 40px; color: var(--text-secondary);">เลือกพนักงานเพื่อดูโปรไฟล์</p>`; 
+        displays.innerHTML = `<p style="color: var(--text-secondary);">เลือกพนักงาน (สูงสุด 3 คน)</p>`; 
     }
 
-    // ส่วนของ Charts (ใช้โค้ดเดิมของคุณได้เลย)
-    const radarDatasets = selected.map((n, i) => ({
+    // กราฟ Radar
+    radarChart.data.labels = t.skills;
+    radarChart.data.datasets = selected.map((n, i) => ({
         label: n, data: skillKeys.map(s => empData[n].skills[s] || 0),
-        borderColor: i === 0 ? '#38bdf8' : '#fb7185', backgroundColor: i === 0 ? 'rgba(56, 189, 248, 0.3)' : 'rgba(251, 113, 133, 0.3)', borderWidth: 2
+        borderColor: chartColors[i], backgroundColor: chartFills[i], borderWidth: 2
     }));
-    radarChart.data.labels = t.skills; radarChart.data.datasets = radarDatasets; radarChart.update();
+    radarChart.update();
     
-    const barDatasets = selected.map((n, i) => ({
+    // กราฟ Bar
+    barChart.data.labels = t.skills;
+    barChart.data.datasets = selected.map((n, i) => ({
         label: n, data: skillKeys.map(s => empData[n].skills[s] || 0),
-        backgroundColor: i === 0 ? '#38bdf8' : '#fb7185'
+        backgroundColor: chartColors[i]
     }));
-    barChart.data.labels = t.skills; barChart.data.datasets = barDatasets; barChart.update();
+    barChart.update();
 
+    // กราฟ Butterfly/Stack (ปรับปรุงให้รองรับ 3 คน)
     butterflyChart.data.labels = t.attLabels;
     butterflyChart.data.datasets = selected.map((n, i) => ({
-        label: n, data: attKeys.map(a => i === 0 ? -(empData[n].att[a]||0) : (empData[n].att[a]||0)),
-        backgroundColor: i === 0 ? '#38bdf8' : '#fb7185'
+        label: n, 
+        data: attKeys.map(a => {
+            let val = empData[n].att[a]||0;
+            return i === 0 ? -val : val; // คนที่ 1 ไปซ้าย, คนที่เหลือไปขวา
+        }),
+        backgroundColor: chartColors[i]
     }));
     butterflyChart.update();
 
@@ -208,26 +278,7 @@ function renderTable() {
     const t = translations[currentLang];
     const area = document.getElementById("tableArea");
     if(selected.length === 0) { area.innerHTML = "<p style='text-align:center; opacity:0.5;'>เลือกพนักงาน...</p>"; return; }
-    
-    let html = `<table><thead><tr><th>Metric / Skill</th>` + selected.map(n => `<th>${n}</th>`).join('') + `</tr></thead><tbody>`;
-    
-    // เพิ่มแถว Department และ Level ให้แสดงในตารางตามรูปที่คุณวงไว้
-    html += `<tr><td style="text-align:left">Department (แผนก)</td>` + selected.map(n => `<td><input type="text" class="input-num" style="width:120px" value="${empData[n].dept}" oninput="empData['${n}'].dept=this.value; update();"></td>`).join('') + `</tr>`;
-    html += `<tr><td style="text-align:left">Level (ตำแหน่ง)</td>` + selected.map(n => `<td><input type="text" class="input-num" style="width:120px" value="${empData[n].level}" oninput="empData['${n}'].level=this.value; update();"></td>`).join('') + `</tr>`;
-    
-    // แถวคะแนนทักษะต่างๆ
-    skillKeys.forEach((s, idx) => {
-        html += `<tr><td style="text-align:left">${t.skills[idx]}</td>` + 
-        selected.map(n => `<td><input type="number" class="input-num" min="0" max="5" step="0.5" value="${empData[n].skills[s]||0}" oninput="empData['${n}'].skills['${s}']=parseFloat(this.value)||0; update();"></td>`).join('') + `</tr>`;
-    });
-    area.innerHTML = html + `</tbody></table>`;
-}
-
-function renderTable() {
-    const t = translations[currentLang];
-    const area = document.getElementById("tableArea");
-    if(selected.length === 0) { area.innerHTML = "<p style='text-align:center; opacity:0.5;'>เลือกพนักงาน...</p>"; return; }
-    let html = `<table><thead><tr><th>Skill</th>` + selected.map(n => `<th>${n}</th>`).join('') + `</tr></thead><tbody>`;
+    let html = `<table><thead><tr><th>Skill</th>` + selected.map((n, i) => `<th style="color:${chartColors[i]}">${n}</th>`).join('') + `</tr></thead><tbody>`;
     skillKeys.forEach((s, idx) => {
         html += `<tr><td style="text-align:left">${t.skills[idx]}</td>` + selected.map(n => `<td><input type="number" class="input-num" min="0" max="5" value="${empData[n].skills[s]||0}" onchange="empData['${n}'].skills['${s}']=parseFloat(this.value); update()"></td>`).join('') + `</tr>`;
     });
@@ -238,7 +289,7 @@ function renderAttTable() {
     const t = translations[currentLang];
     const area = document.getElementById("attTableArea");
     if(selected.length === 0) { area.innerHTML = ""; return; }
-    let html = `<table><thead><tr><th>Metric</th>` + selected.map(n => `<th>${n}</th>`).join('') + `</tr></thead><tbody>`;
+    let html = `<table><thead><tr><th>Metric</th>` + selected.map((n, i) => `<th style="color:${chartColors[i]}">${n}</th>`).join('') + `</tr></thead><tbody>`;
     attKeys.forEach((a, idx) => {
         html += `<tr><td style="text-align:left">${t.attLabels[idx]}</td>` + selected.map(n => `<td><input type="number" class="input-num" min="0" value="${empData[n].att[a]||0}" onchange="empData['${n}'].att['${a}']=parseFloat(this.value); update()"></td>`).join('') + `</tr>`;
     });
@@ -268,14 +319,17 @@ function renderList() {
     const list = document.getElementById("empList");
     list.innerHTML = Object.keys(empData).map(name => {
         const id = name.replace(/\s/g, '');
-        return `<div class="emp-item ${selected.includes(name) ? 'active' : ''}" onclick="toggleSelect('${name}')">
+        const isSel = selected.includes(name);
+        const selIdx = selected.indexOf(name);
+        return `<div class="emp-item ${isSel ? 'active' : ''}" onclick="toggleSelect('${name}')" style="${isSel ? 'border-color:' + chartColors[selIdx] : ''}">
             <span class="setting-icon" onclick="toggleEdit('${name}', event)">⚙️</span>
             <b>${name}</b><br><small>${empData[name].level} | ${empData[name].dept}</small>
             <div class="edit-mode-box" id="edit-box-${id}" onclick="event.stopPropagation()">
                 <input type="text" value="${name}" onchange="updateEmpMeta('${name}', 'name', this.value)">
                 <input type="text" value="${empData[name].level}" onchange="updateEmpMeta('${name}', 'level', this.value)">
                 <input type="text" value="${empData[name].dept}" onchange="updateEmpMeta('${name}', 'dept', this.value)">
-                <button style="width:100%; margin-top:5px; background:var(--accent-rose); border:none; color:white; border-radius:4px; font-size:10px;" onclick="deleteEmp('${name}')">ลบพนักงาน</button>
+                <button style="width:100%; margin-top:5px; background:var(--accent-blue); border:none; color:white; border-radius:4px; font-size:10px; padding:5px;" onclick="triggerImg('${name}')">📷 เปลี่ยนรูป</button>
+                <button style="width:100%; margin-top:5px; background:var(--accent-rose); border:none; color:white; border-radius:4px; font-size:10px; padding:5px;" onclick="deleteEmp('${name}')">ลบพนักงาน</button>
             </div></div>`;
     }).join('');
 }
