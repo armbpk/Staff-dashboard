@@ -6,137 +6,141 @@
     <title>Employee View - Skills Matrix</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        /* --- คงสไตล์เดิมของคุณไว้ทั้งหมด --- */
         :root {
             --bg-body: #020617; --bg-card: #0f172a; --accent-blue: #38bdf8;
+            --accent-green: #4ade80; --accent-rose: #fb7185; --accent-warn: #fbbf24;
             --text-primary: #f8fafc; --text-secondary: #94a3b8; --border: #1e293b;
         }
         * { box-sizing: border-box; font-family: 'Inter', 'Sarabun', sans-serif; }
         
         body { 
             margin: 0; background-color: var(--bg-body); color: var(--text-primary);
-            display: flex; flex-direction: column; min-height: 100vh; overflow-x: hidden;
+            display: flex; height: 100vh; overflow: hidden; 
         }
 
-        /* --- ปรับแต่ง Layout ให้ลื่นไหลทั้งคอมและมือถือ --- */
-        .container { padding: 15px; display: flex; flex-direction: column; gap: 15px; width: 100%; max-width: 1400px; margin: 0 auto; }
+        .sidebar { width: 320px; border-right: 1px solid var(--border); padding: 15px; display: flex; flex-direction: column; flex-shrink: 0; }
+        .main-content { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
+        .top-row { display: grid; grid-template-columns: 1fr 1.5fr 1.5fr; gap: 15px; min-height: 320px; }
+        .card { background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border); padding: 15px; position: relative; }
+        .table-container { overflow-x: auto; width: 100%; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 10px; border-bottom: 1px solid var(--border); font-size: 12px; color: white; }
 
-        .header-section { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; }
-        .lang-bar { display: flex; gap: 8px; }
-        .lang-btn { background: var(--bg-card); border: 1px solid var(--border); color: white; padding: 5px 12px; border-radius: 6px; cursor: pointer; }
-
-        /* การจัดเรียงกราฟ */
-        .grid-charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; }
-        
-        .card { 
-            background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border); 
-            padding: 20px; display: flex; flex-direction: column; min-height: 350px;
-        }
-
-        .card h4 { margin-top: 0; color: #FFFFFF; font-size: 1.1rem; border-left: 4px solid var(--accent-blue); padding-left: 10px; }
-
-        .table-container { overflow-x: auto; margin-top: 10px; width: 100%; }
-        table { width: 100%; border-collapse: collapse; min-width: 500px; }
-        th, td { padding: 12px; text-align: center; border-bottom: 1px solid var(--border); color: white; }
-
-        /* ปรับปรุงให้แสดงผลในมือถือ (Responsive) */
+        /* --- ส่วนที่เพิ่มเพื่อให้ดูในมือถือได้ (จะไม่กระทบการแสดงผลในคอม) --- */
         @media (max-width: 768px) {
-            .grid-charts { grid-template-columns: 1fr; }
-            .card { min-height: 300px; padding: 15px; }
-            .container { padding: 10px; }
+            body { flex-direction: column; height: auto; overflow-y: auto; }
+            .sidebar { width: 100%; height: auto; border-right: none; border-bottom: 1px solid var(--border); }
+            .main-content { height: auto; overflow: visible; padding: 10px; }
+            .top-row { grid-template-columns: 1fr; min-height: auto; }
+            .top-row .card { height: 350px; }
+            /* ปรับ Grid ส่วนล่างให้เรียงเป็นแนวตั้ง */
+            div[style*="grid-template-columns: 1.2fr 1.8fr"], 
+            div[style*="grid-template-columns: 1fr 1fr"] { 
+                grid-template-columns: 1fr !important; 
+            }
+            .table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
         }
-
-        footer { text-align: center; padding: 20px; color: var(--text-secondary); font-size: 12px; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="header-section">
-        <h2 style="color: var(--accent-blue); margin: 0;">ข้อมูลทักษะพนักงาน</h2>
-        <div class="lang-bar">
-            <button class="lang-btn" onclick="setLang('th')">TH</button>
-            <button class="lang-btn" onclick="setLang('en')">EN</button>
-        </div>
-    </div>
+<div class="sidebar">
+    <div id="side-title" style="font-size: 1.2rem; font-weight: 800; color: #FFFFFF; margin-bottom: 15px;">PQC SKILLS VIEW</div>
+    <div id="empList"></div>
+</div>
 
-    <div class="grid-charts">
-        <div class="card">
-            <h4>📊 Skills Radar Chart</h4>
-            <div style="flex:1;"><canvas id="radarChart"></canvas></div>
+<div class="main-content">
+    <div class="top-row">
+        <div class="card" id="profileCard">
+            <h4 style="color: white; text-align: center;">ข้อมูลพนักงาน</h4>
+            <div id="profileDisplays"></div>
         </div>
-        <div class="card">
-            <h4>📈 Skills Bar Chart</h4>
-            <div style="flex:1;"><canvas id="barChart"></canvas></div>
-        </div>
+        <div class="card"><canvas id="radarChart"></canvas></div>
+        <div class="card"><canvas id="barChart"></canvas></div>
     </div>
 
     <div class="card">
-        <h4>📋 Skill Matrix Table</h4>
-        <div class="table-container" id="tableArea">
-            </div>
+        <h4 style="color: white;">เปรียบเทียบวินัย</h4>
+        <div style="height: 200px;"><canvas id="butterflyChart"></canvas></div>
+    </div>
+
+    <div class="card">
+        <h4 style="color: white;">ตารางทักษะ</h4>
+        <div class="table-container" id="tableArea"></div>
     </div>
 </div>
 
-<footer>© 2026 Haier Thailand PQC Team</footer>
-
 <script>
-    // ส่วนนี้คือการตั้งค่าให้ตัวหนังสือในกราฟเป็นสีขาวทั้งหมด
-    const chartTextColor = '#FFFFFF';
-    let radarChart, barChart;
+    /* --- โค้ดส่วนดึงข้อมูลเดิมของคุณ --- */
+    let empData = {};
+    const skillKeys = ["Basic Knowledge", "Inspection Skill", "Documentation & System", "Quality Analysis", "Process Control", "Communication", "Advanced Skill"];
 
     function initCharts() {
-        const commonOptions = {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { labels: { color: chartTextColor, font: { size: 12 } } }
-            }
+        const textColor = '#FFFFFF'; // กำหนดตัวอักษรในกราฟเป็นสีขาว
+        const options = { 
+            responsive: true, 
+            maintainAspectRatio: false, 
+            plugins: { 
+                legend: { 
+                    display: true, 
+                    labels: { color: textColor, font: { size: 10 } } 
+                } 
+            } 
         };
 
-        // กราฟเรดาร์
-        radarChart = new Chart(document.getElementById("radarChart"), {
-            type: 'radar',
-            data: { 
-                labels: ["ความรู้พื้นฐาน", "ทักษะการตรวจ", "เอกสาร/ระบบ", "การวิเคราะห์", "คุมกระบวนการ", "สื่อสาร", "ขั้นสูง"],
-                datasets: [] 
-            },
-            options: {
-                ...commonOptions,
-                scales: {
-                    r: {
-                        grid: { color: '#334155' },
-                        angleLines: { color: '#334155' },
-                        pointLabels: { color: chartTextColor, font: { size: 12 } },
-                        ticks: { display: false }
-                    }
-                }
-            }
+        // 1. กราฟเรดาร์
+        radarChart = new Chart(document.getElementById("radarChart"), { 
+            type: 'radar', 
+            data: { labels: skillKeys, datasets: [] }, 
+            options: { 
+                ...options, 
+                scales: { 
+                    r: { 
+                        min: 0, max: 5, 
+                        grid: { color: '#1e293b' },
+                        pointLabels: { color: textColor, font: { size: 11 } },
+                        ticks: { display: false } 
+                    } 
+                } 
+            } 
         });
 
-        // กราฟแท่ง
-        barChart = new Chart(document.getElementById("barChart"), {
-            type: 'bar',
-            data: { 
-                labels: ["ความรู้พื้นฐาน", "ทักษะการตรวจ", "เอกสาร/ระบบ", "การวิเคราะห์", "คุมกระบวนการ", "สื่อสาร", "ขั้นสูง"],
-                datasets: [] 
-            },
-            options: {
-                ...commonOptions,
-                indexAxis: 'y',
-                scales: {
-                    x: { ticks: { color: chartTextColor }, grid: { color: '#1e293b' } },
-                    y: { ticks: { color: chartTextColor } }
-                }
-            }
+        // 2. กราฟแท่ง
+        barChart = new Chart(document.getElementById("barChart"), { 
+            type: 'bar', 
+            data: { labels: skillKeys, datasets: [] }, 
+            options: { 
+                ...options, 
+                indexAxis: 'y', 
+                scales: { 
+                    x: { min: 0, max: 5, grid: { color: '#1e293b' }, ticks: { color: textColor } },
+                    y: { ticks: { color: textColor } } 
+                } 
+            } 
+        });
+
+        // 3. กราฟ Butterfly
+        butterflyChart = new Chart(document.getElementById("butterflyChart"), { 
+            type: 'bar', 
+            data: { labels: ["Absent", "Leave", "Sick", "Late"], datasets: [] }, 
+            options: { 
+                ...options, 
+                indexAxis: 'y', 
+                scales: { 
+                    x: { stacked: true, grid: { display: false }, ticks: { color: textColor } }, 
+                    y: { stacked: true, position: 'center', ticks: { color: textColor } } 
+                } 
+            } 
         });
     }
 
-    // ฟังก์ชันดึงข้อมูลพนักงานจาก LocalStorage (ที่เซฟมาจากหน้าหลัก)
+    // ฟังก์ชัน loadData ดึงข้อมูลจาก localStorage (ชื่อ key ต้องตรงกับหน้าแก้ไข)
     function loadData() {
         const saved = localStorage.getItem('hr_pro_portfolio_v7');
         if(saved) {
-            // เขียน logic แสดงผลข้อมูลตามที่คุณเคยทำไว้
-            console.log("Data loaded");
+            empData = JSON.parse(saved);
+            // เรียกฟังก์ชันแสดงผลของคุณที่นี่ (เช่น renderList, update)
         }
     }
 
