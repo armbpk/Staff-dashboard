@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Skills Dashboard (View Only)</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-body: #020617; --bg-card: #0f172a; --accent-blue: #38bdf8;
+            --accent-green: #4ade80; --accent-rose: #fb7185; --accent-warn: #fbbf24;
+            --text-primary: #f8fafc; --text-secondary: #94a3b8; --border: #1e293b;
+        }
+        * { box-sizing: border-box; font-family: 'Inter', 'Sarabun', sans-serif; }
+        body { margin: 0; background-color: var(--bg-body); color: var(--text-primary); display: flex; height: 100vh; overflow: hidden; }
+        
+        /* Sidebar Responsive */
+        .sidebar { width: 280px; background: #020617; border-right: 1px solid var(--border); padding: 15px; display: flex; flex-direction: column; flex-shrink: 0; }
+        .emp-list-container { flex: 1; overflow-y: auto; margin-top: 10px; }
+        .emp-item { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin-bottom: 8px; cursor: pointer; transition: 0.2s; }
+        .emp-item.active { border-color: var(--accent-blue); background: rgba(56, 189, 248, 0.1); }
+        
+        .main-content { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
+        
+        /* Grid Layout */
+        .top-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; }
+        .card { background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border); padding: 15px; position: relative; }
+        
+        /* Profile Display */
+        .profile-circle { width: 70px; height: 70px; border-radius: 50%; border: 2px solid var(--accent-blue); overflow: hidden; margin: 0 auto 10px; background: #000; display: flex; align-items: center; justify-content: center; }
+        .profile-circle img { width: 100%; height: 100%; object-fit: cover; }
+        
+        /* Table Style (View Only) */
+        .table-container { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 300px; }
+        th, td { padding: 10px; text-align: center; border-bottom: 1px solid var(--border); font-size: 13px; }
+        .score-val { font-weight: bold; color: var(--accent-blue); }
+        .att-val { font-weight: bold; color: var(--accent-rose); }
+
+        /* Lang Bar */
+        .lang-bar { display: flex; gap: 5px; margin-bottom: 15px; }
+        .lang-btn { background: var(--bg-card); border: 1px solid var(--border); color: var(--text-secondary); padding: 4px 10px; border-radius: 5px; cursor: pointer; font-size: 11px; }
+        .lang-btn.active { border-color: var(--accent-blue); color: var(--accent-blue); }
+
+        @media (max-width: 768px) {
+            body { flex-direction: column; overflow: auto; }
+            .sidebar { width: 100%; height: auto; border-right: none; border-bottom: 1px solid var(--border); }
+            .main-content { height: auto; overflow: visible; }
+            .top-row { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <div class="lang-bar">
+        <button class="lang-btn active" onclick="setLang('th')">TH</button>
+        <button class="lang-btn" onclick="setLang('cn')">CN</button>
+        <button class="lang-btn" onclick="setLang('en')">EN</button>
+    </div>
+    <div id="side-title" style="font-weight: 800; color: var(--accent-blue); margin-bottom: 10px;">SKILLS DASHBOARD</div>
+    <div class="emp-list-container" id="empList"></div>
+</div>
+
+<div class="main-content">
+    <div class="top-row">
+        <div class="card" style="text-align: center;">
+            <div id="profileDisplays" style="display:flex; justify-content:center; gap:15px; flex-wrap: wrap;">
+                <p style="margin-top: 30px; color: var(--text-secondary);">แตะเลือกพนักงานด้านซ้าย</p>
+            </div>
+            <h4 id="lbl-compare" style="margin-top: 15px;">Dashboard</h4>
+        </div>
+        <div class="card" style="height: 250px;"><canvas id="radarChart"></canvas></div>
+        <div class="card" style="height: 250px;"><canvas id="barChart"></canvas></div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">
+        <div class="card">
+            <h4 id="lbl-discipline" style="color: var(--accent-warn);">⚖️ Discipline</h4>
+            <div style="height: 180px;"><canvas id="butterflyChart"></canvas></div>
+            <hr style="border:0; border-top:1px solid var(--border); margin:15px 0;">
+            <div id="rankSkillArea"></div>
+        </div>
+        <div class="card">
+            <h4 id="lbl-skillMatrix" style="margin: 0 0 10px 0; color: var(--accent-green);">📊 Skill Matrix</h4>
+            <div class="table-container" id="tableArea"></div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h4 id="lbl-attMatrix" style="margin: 0 0 10px 0; color: var(--accent-blue);">📅 Attendance Record</h4>
+        <div class="table-container" id="attTableArea"></div>
+    </div>
+</div>
+
+<script>
+let currentLang = 'th';
+const skillKeys = ["Basic Knowledge", "Inspection Skill", "Documentation & System", "Quality Analysis", "Process Control", "Communication", "Advanced Skill"];
+const attKeys = ["Absent", "Personal Leave", "Sick Leave", "Vacation", "Late"];
+
+const translations = {
+    th: { sideTitle: "ข้อมูลทักษะพนักงาน", compare: "สรุปผลการประเมิน", topSkill: "อันดับทักษะ", discipline: "⚖️ สถิติการเข้างาน", skillMatrix: "📊 คะแนนทักษะ", attMatrix: "📅 รายละเอียดการขาดลามาสาย", skills: ["ความรู้พื้นฐาน", "ทักษะการตรวจ", "เอกสาร/ระบบ", "การวิเคราะห์", "คุมกระบวนการ", "สื่อสาร", "ขั้นสูง"], attLabels: ["ขาดงาน", "ลากิจ", "ลาป่วย", "พักร้อน", "มาสาย"] },
+    cn: { sideTitle: "员工技能仪表板", compare: "评估总结", topSkill: "技能排名", discipline: "⚖️ 考勤统计", skillMatrix: "📊 技能评分", attMatrix: "📅 缺勤详情", skills: ["基础知识", "检查技能", "文件/系统", "质量分析", "过程控制", "沟通", "高级技能"], attLabels: ["缺勤", "事假", "病假", "年假", "迟到"] },
+    en: { sideTitle: "SKILLS DASHBOARD", compare: "Evaluation Summary", topSkill: "Top Skills", discipline: "⚖️ Attendance", skillMatrix: "📊 Skill Scores", attMatrix: "📅 Attendance Details", skills: skillKeys, attLabels: ["Absent", "Personal", "Sick", "Vacation", "Late"] }
+};
+
+let empData = {}; // จะโหลดจาก LocalStorage
+let selected = [];
+let radarChart, barChart, butterflyChart;
+
+function setLang(lang) {
+    currentLang = lang;
+    document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+    update();
+}
+
+function init() {
+    const saved = localStorage.getItem('hr_pro_portfolio_v7');
+    if(saved) {
+        empData = JSON.parse(saved);
+    }
+    initCharts();
+    renderList();
+    update();
+}
+
+function initCharts() {
+    const options = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } };
+    radarChart = new Chart(document.getElementById("radarChart"), { type: 'radar', data: { labels: [], datasets: [] }, options: { ...options, scales: { r: { min: 0, max: 5, grid: { color: '#1e293b' }, ticks: { display: false } } } } });
+    barChart = new Chart(document.getElementById("barChart"), { type: 'bar', data: { labels: [], datasets: [] }, options: { ...options, indexAxis: 'y', scales: { x: { min: 0, max: 5, grid: { color: '#1e293b' } } } } });
+    butterflyChart = new Chart(document.getElementById("butterflyChart"), { type: 'bar', data: { labels: [], datasets: [] }, options: { ...options, indexAxis: 'y', scales: { x: { stacked: true, grid: { display: false } }, y: { stacked: true, position: 'center' } } } });
+}
+
+function toggleSelect(name) {
+    if(selected.includes(name)) selected = selected.filter(x => x !== name);
+    else if(selected.length < 2) selected.push(name);
+    renderList(); update();
+}
+
+function update() {
+    const t = translations[currentLang];
+    document.getElementById("side-title").innerText = t.sideTitle;
+    document.getElementById("lbl-compare").innerText = t.compare;
+    document.getElementById("lbl-discipline").innerText = t.discipline;
+    document.getElementById("lbl-skillMatrix").innerText = t.skillMatrix;
+    document.getElementById("lbl-attMatrix").innerText = t.attMatrix;
+
+    const displays = document.getElementById("profileDisplays");
+    if(selected.length > 0) {
+        displays.innerHTML = selected.map(n => `
+            <div style="text-align:center">
+                <div class="profile-circle">${empData[n].img ? `<img src="${empData[n].img}">` : `<b>${empData[n].init}</b>`}</div>
+                <div style="font-size:12px; font-weight:bold">${n}</div>
+            </div>`).join('');
+    }
+
+    const datasets = selected.map((n, i) => ({
+        label: n, 
+        data: skillKeys.map(s => empData[n].skills[s] || 0),
+        borderColor: i === 0 ? '#38bdf8' : '#fb7185', 
+        backgroundColor: i === 0 ? 'rgba(56, 189, 248, 0.4)' : 'rgba(251, 113, 133, 0.4)',
+        borderWidth: 2
+    }));
+
+    radarChart.data.labels = t.skills; radarChart.data.datasets = datasets; radarChart.update();
+    barChart.data.labels = t.skills; barChart.data.datasets = datasets; barChart.update();
+
+    butterflyChart.data.labels = t.attLabels;
+    butterflyChart.data.datasets = selected.map((n, i) => ({
+        label: n, data: attKeys.map(a => i === 0 ? -(empData[n].att[a]||0) : (empData[n].att[a]||0)),
+        backgroundColor: i === 0 ? '#38bdf8' : '#fb7185'
+    }));
+    butterflyChart.update();
+
+    renderTable(); renderAttTable(); renderRankings();
+}
+
+function renderTable() {
+    const t = translations[currentLang];
+    const area = document.getElementById("tableArea");
+    if(selected.length === 0) { area.innerHTML = "<p style='text-align:center; opacity:0.5;'>โปรดเลือกพนักงาน...</p>"; return; }
+    let html = `<table><thead><tr><th>Skill</th>` + selected.map(n => `<th>${n}</th>`).join('') + `</tr></thead><tbody>`;
+    skillKeys.forEach((s, idx) => {
+        html += `<tr><td style="text-align:left">${t.skills[idx]}</td>` + selected.map(n => `<td class="score-val">${empData[n].skills[s]||0}</td>`).join('') + `</tr>`;
+    });
+    area.innerHTML = html + `</tbody></table>`;
+}
+
+function renderAttTable() {
+    const t = translations[currentLang];
+    const area = document.getElementById("attTableArea");
+    if(selected.length === 0) { area.innerHTML = ""; return; }
+    let html = `<table><thead><tr><th>Metric</th>` + selected.map(n => `<th>${n}</th>`).join('') + `</tr></thead><tbody>`;
+    attKeys.forEach((a, idx) => {
+        html += `<tr><td style="text-align:left">${t.attLabels[idx]}</td>` + selected.map(n => `<td class="att-val">${empData[n].att[a]||0}</td>`).join('') + `</tr>`;
+    });
+    area.innerHTML = html + `</tbody></table>`;
+}
+
+function renderRankings() {
+    const all = Object.keys(empData).map(n => ({ name: n, avg: (skillKeys.reduce((a, s) => a + (empData[n].skills[s] || 0), 0) / skillKeys.length).toFixed(2) })).sort((a,b) => b.avg - a.avg);
+    document.getElementById("rankSkillArea").innerHTML = `<div style="margin-bottom:10px; font-size:14px; color:var(--accent-green)">🏆 Top Performers</div>` + all.slice(0, 3).map((r, i) => `<div style="display:flex; justify-content:space-between; padding:5px 0; font-size:12px; border-bottom:1px solid #1e293b;"><span>${i+1}. ${r.name}</span> <b>${r.avg}</b></div>`).join('');
+}
+
+function renderList() {
+    const list = document.getElementById("empList");
+    list.innerHTML = Object.keys(empData).map(name => `
+        <div class="emp-item ${selected.includes(name) ? 'active' : ''}" onclick="toggleSelect('${name}')">
+            <b>${name}</b><br><small>${empData[name].level} | ${empData[name].dept}</small>
+        </div>`).join('');
+}
+
+window.onload = init;
+</script>
+</body>
+</html>
