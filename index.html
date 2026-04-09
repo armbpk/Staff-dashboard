@@ -3,52 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HR Analytics - Pro Skills Portfolio</title>
+    <title>Staff Analytics - Skills Matrix</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --bg-body: #020617; --bg-card: #0f172a; --accent-blue: #38bdf8;
             --accent-green: #4ade80; --accent-rose: #fb7185; --accent-warn: #fbbf24;
+            --accent-purple: #a855f7; /* เพิ่มสีที่ 3 สำหรับพนักงานคนที่ 3 */
             --text-primary: #f8fafc; --text-secondary: #94a3b8; --border: #1e293b;
         }
-        * { box-sizing: border-box; font-family: 'Inter', 'Sarabun', sans-serif; }
+        * { box-sizing: border-box; font-family: 'Inter', 'Sarabun', 'Microsoft YaHei', sans-serif; }
         
-        body { margin: 0; background-color: var(--bg-body); color: var(--text-primary); display: flex; height: 100vh; overflow: hidden; }
+        body { 
+            margin: 0; 
+            background-color: var(--bg-body); 
+            color: var(--text-primary); 
+            display: flex; 
+            height: 100vh; 
+            overflow: hidden; 
+        }
 
-        /* --- Responsive Sidebar --- */
-        .sidebar { width: 320px; background: #020617; border-right: 1px solid var(--border); padding: 15px; display: flex; flex-direction: column; flex-shrink: 0; }
-        .main-content { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
 
-        @media (max-width: 768px) {
-            body { flex-direction: column; height: auto; overflow-y: auto; }
-            .sidebar { width: 100%; height: auto; border-right: none; border-bottom: 1px solid var(--border); }
-            .main-content { padding: 10px; }
-            .top-row { grid-template-columns: 1fr !important; }
-            div[style*="grid-template-columns: 1.2fr 1.8fr"] { grid-template-columns: 1fr !important; }
+        .sidebar { 
+            width: 320px; 
+            background: #020617; 
+            border-right: 1px solid var(--border); 
+            padding: 15px; 
+            display: flex; 
+            flex-direction: column; 
+            flex-shrink: 0; 
+            height: 100%;
+        }
+
+        .main-content { 
+            flex: 1; 
+            padding: 20px; 
+            overflow-y: auto; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 20px; 
+            height: 100%;
         }
 
         .lang-bar { display: flex; gap: 5px; margin-bottom: 10px; }
-        .lang-btn { background: var(--bg-card); border: 1px solid var(--border); color: white; padding: 4px 8px; border-radius: 5px; cursor: pointer; font-size: 11px; }
+        .lang-btn { background: var(--bg-card); border: 1px solid var(--border); color: var(--text-secondary); padding: 4px 8px; border-radius: 5px; cursor: pointer; font-size: 11px; }
         .lang-btn.active { border-color: var(--accent-blue); color: var(--accent-blue); }
-        .emp-list-container { flex: 1; overflow-y: auto; margin: 15px 0; padding-right: 5px; }
-        .emp-item { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 10px; padding: 10px; margin-bottom: 8px; cursor: pointer; position: relative; }
-        .emp-item.active { border-color: var(--accent-blue); background: rgba(56, 189, 248, 0.1); }
-        .edit-mode-box { background: #1e293b; padding: 10px; border-radius: 8px; margin-top: 8px; display: none; }
-        .edit-mode-box input { width: 100%; background: #020617; border: 1px solid var(--border); color: white; padding: 5px; margin: 3px 0; border-radius: 4px; }
         
-        .top-row { display: grid; grid-template-columns: 1fr 1.5fr 1.5fr; gap: 15px; }
-        .card { background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border); padding: 15px; position: relative; }
-        .profile-circle { width: 65px; height: 65px; border-radius: 50%; border: 3px solid var(--accent-blue); overflow: hidden; margin: 0 auto 5px; background: #000; display: flex; align-items: center; justify-content: center; }
+        .emp-list-container { flex: 1; overflow-y: auto; margin: 15px 0; padding-right: 5px; }
+        .emp-item { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 10px; padding: 10px; margin-bottom: 8px; cursor: pointer; transition: 0.2s; position: relative; }
+        .emp-item.active { border-color: var(--accent-blue); background: rgba(56, 189, 248, 0.1); }
+        
+        .edit-mode-box { background: #1e293b; padding: 10px; border-radius: 8px; margin-top: 8px; display: none; }
+        .edit-mode-box input { width: 100%; background: #020617; border: 1px solid var(--border); color: white; padding: 5px; margin: 3px 0; border-radius: 4px; font-size: 12px; }
+        
+        .top-row { 
+            display: grid; 
+            grid-template-columns: 1fr 1.5fr 1.5fr; 
+            gap: 15px; 
+            min-height: 320px; 
+        }
+
+        .card { 
+            background: var(--bg-card); 
+            border-radius: 12px; 
+            border: 1px solid var(--border); 
+            padding: 15px; 
+            position: relative; 
+            display: flex;
+            flex-direction: column;
+        }
+
+        .profile-circle { width: 65px; height: 65px; border-radius: 50%; border: 3px solid var(--accent-blue); overflow: hidden; margin: 0 auto 5px; background: #000; display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; }
         .profile-circle img { width: 100%; height: 100%; object-fit: cover; }
         
-        .table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-        table { width: 100%; border-collapse: collapse; min-width: 400px; }
-        th, td { padding: 10px; text-align: center; border-bottom: 1px solid var(--border); font-size: 12px; color: white; }
-        .input-num { width: 60px; background: #020617; border: 1px solid var(--border); color: white; padding: 4px; border-radius: 5px; text-align: center; }
-        .btn { padding: 8px 15px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; }
+        .table-container { overflow-x: auto; width: 100%; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 10px; text-align: center; border-bottom: 1px solid var(--border); font-size: 12px; }
+        
+        .input-num { width: 50px; background: #020617; border: 1px solid var(--border); color: white; padding: 4px; border-radius: 5px; text-align: center; }
+        .btn { padding: 8px 15px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; transition: 0.2s; }
         .btn-add { background: rgba(56, 189, 248, 0.1); color: var(--accent-blue); border: 1px dashed var(--accent-blue); width: 100%; margin-bottom: 10px; }
-        .btn-save { background: var(--accent-green); color: #020617; width: 100%; }
-        h4 { color: white !important; }
+        .btn-save { background: var(--accent-green); color: #020617; width: 100%; margin-top: auto; }
+        
+        .setting-icon { position: absolute; right: 10px; top: 10px; opacity: 0.5; transition: 0.3s; }
+        .setting-icon:hover { opacity: 1; transform: rotate(45deg); }
+
+        canvas { max-height: 250px !important; width: 100% !important; }
     </style>
 </head>
 <body>
@@ -56,19 +96,22 @@
 <div class="sidebar">
     <div class="lang-bar">
         <button class="lang-btn active" onclick="setLang('th')">TH</button>
+        <button class="lang-btn" onclick="setLang('cn')">CN</button>
         <button class="lang-btn" onclick="setLang('en')">EN</button>
     </div>
-    <div id="side-title" style="font-size: 1.2rem; font-weight: 800; color: var(--accent-blue); margin-bottom: 15px;">PQC ADMIN</div>
+    <div id="side-title" style="font-size: 1.2rem; font-weight: 800; color: #FFFFFF; margin-bottom: 15px;">PQC SKILLS VIEW</div>
     <button class="btn btn-add" onclick="addEmployee()">+ เพิ่มพนักงาน</button>
     <div class="emp-list-container" id="empList"></div>
-    <button class="btn btn-save" onclick="saveData()">💾 บันทึกข้อมูล</button>
+    <button class="btn btn-save" onclick="saveData()">💾 บันทึกข้อมูลทั้งหมด</button>
 </div>
 
 <div class="main-content">
     <div class="top-row">
         <div class="card" style="text-align: center;">
-            <div id="profileDisplays" style="display:flex; justify-content:center; gap:10px; flex-wrap: wrap;"></div>
-            <h4 id="lbl-compare">เปรียบเทียบพนักงาน</h4>
+            <div id="profileDisplays" style="display:flex; justify-content:center; gap:10px; flex-wrap: wrap; flex: 1; align-items: center;">
+                <p style="color: var(--text-secondary);">เลือกพนักงาน (สูงสุด 3 คน)</p>
+            </div>
+            <h4 id="lbl-compare" style="margin-top: 10px; font-size: 14px;">เปรียบเทียบพนักงาน</h4>
         </div>
         <div class="card"><canvas id="radarChart"></canvas></div>
         <div class="card"><canvas id="barChart"></canvas></div>
@@ -76,107 +119,226 @@
 
     <div style="display: grid; grid-template-columns: 1.2fr 1.8fr; gap: 15px;">
         <div class="card">
-            <h4 id="lbl-discipline">⚖️ Discipline</h4>
+            <h4 id="lbl-topSkill" style="color: var(--accent-rose); margin-top: 0;">🏆 Top Skills</h4>
+            <div id="rankSkillArea"></div>
+            <hr style="border:0; border-top:1px solid var(--border); margin:15px 0;">
+            <h4 id="lbl-discipline" style="color: var(--accent-warn);">⚖️ Discipline Comparison</h4>
             <div style="height: 180px;"><canvas id="butterflyChart"></canvas></div>
         </div>
         <div class="card">
-            <h4 id="lbl-skillMatrix">📊 Skill Table</h4>
+            <h4 id="lbl-skillMatrix" style="margin: 0 0 15px 0; color: var(--accent-green);">📊 Skill Evaluation Matrix</h4>
             <div class="table-container" id="tableArea"></div>
         </div>
     </div>
+
+    <div class="card">
+        <h4 id="lbl-attMatrix" style="margin: 0 0 15px 0; color: var(--accent-blue);">📅 Attendance Evaluation Matrix</h4>
+        <div class="table-container" id="attTableArea"></div>
+    </div>
 </div>
 
+<input type="file" id="imgUpload" style="display:none" onchange="handleImage(this)">
+
 <script>
-/* --- (Script ส่วน Logic คงเดิมตามที่คุณให้มา โดยปรับสี Chart เป็นสีขาว) --- */
 let currentLang = 'th';
+let currentTargetImg = null;
 const skillKeys = ["Basic Knowledge", "Inspection Skill", "Documentation & System", "Quality Analysis", "Process Control", "Communication", "Advanced Skill"];
 const attKeys = ["Absent", "Personal Leave", "Sick Leave", "Vacation", "Late"];
-let empData = {}; // เริ่มจากว่างหรือโหลดจาก LocalStorage
+const chartColors = ['#38bdf8', '#fb7185', '#a855f7']; // ฟ้า, ชมพู, ม่วง
+const chartFills = ['rgba(56, 189, 248, 0.3)', 'rgba(251, 113, 133, 0.3)', 'rgba(168, 85, 247, 0.3)'];
+
+const translations = {
+    th: { sideTitle: "พอร์ตโฟลิโอทักษะ", compare: "เปรียบเทียบพนักงาน", topSkill: "🏆 อันดับทักษะ", discipline: "⚖️ เปรียบเทียบวินัย", skillMatrix: "📊 ตารางทักษะ", attMatrix: "📅 ตารางการลงเวลา", skills: ["ความรู้พื้นฐาน", "ทักษะการตรวจ", "เอกสาร/ระบบ", "การวิเคราะห์", "คุมกระบวนการ", "สื่อสาร", "ขั้นสูง"], attLabels: ["ขาดงาน", "ลากิจ", "ลาป่วย", "พักร้อน", "มาสาย"] },
+    cn: { sideTitle: "技能组合", compare: "员工对比", topSkill: "🏆 技能排名", discipline: "⚖️ 纪律对比", skillMatrix: "📊 技能矩陣", attMatrix: "📅 考勤矩陣", skills: ["基础知识", "检查技能", "文件/系统", "质量分析", "过程控制", "沟通", "高级技能"], attLabels: ["缺勤", "事假", "病假", "年假", "迟到"] },
+    en: { sideTitle: "SKILLS PORTFOLIO", compare: "Comparison Profile", topSkill: "🏆 Top Skills", discipline: "⚖️ Discipline Comparison", skillMatrix: "📊 Skill Matrix", attMatrix: "📅 Attendance Matrix", skills: skillKeys, attLabels: ["Absent", "Personal", "Sick", "Vacation", "Late"] }
+};
+
+let empData = {
+    "Naratip K.": { level: "S3", dept: "配管+大管路+氦检", init: "NK", skills: {"Basic Knowledge":5, "Inspection Skill":5, "Documentation & System":4, "Quality Analysis":4, "Process Control":4, "Communication":4, "Advanced Skill":5}, att: {Absent:0, "Personal Leave":0, "Sick Leave":0, Vacation:0, Late:0} },
+    "Navamin C.": { level: "S3", dept: "钣金+注塑", init: "NC", skills: {"Basic Knowledge":3, "Inspection Skill":4, "Documentation & System":3, "Quality Analysis":4, "Process Control":4, "Communication":4, "Advanced Skill":5}, att: {Absent:0, "Personal Leave":0, "Sick Leave":0, Vacation:0, Late:0} },
+    "Benjaporn S.": { level: "S3", dept: "预装+喷粉+电控+附件", init: "BS", skills: {"Basic Knowledge":5, "Inspection Skill":5, "Documentation & System":4, "Quality Analysis":4, "Process Control":5, "Communication":4, "Advanced Skill":5}, att: {Absent:0, "Personal Leave":0, "Sick Leave":0, Vacation:0, Late:0} },
+    "Panisara N.": { level: "S3", dept: "SMT", init: "PN", skills: {"Basic Knowledge":5, "Inspection Skill":4, "Documentation & System":2, "Quality Analysis":4, "Process Control":4, "Communication":3, "Advanced Skill":2}, att: {Absent:0, "Personal Leave":0, "Sick Leave":0, Vacation:0, Late:0} },
+    "Aiwarin P.": { level: "S2", dept: "两器", init: "AP", skills: {"Basic Knowledge":5, "Inspection Skill":4, "Documentation & System":0, "Quality Analysis":4, "Process Control":4, "Communication":3, "Advanced Skill":1}, att: {Absent:0, "Personal Leave":0, "Sick Leave":0, Vacation:0, Late:0} },
+    "Thanyarat C.": { level: "S2", dept: "两器", init: "TC", skills: {"Basic Knowledge":5, "Inspection Skill":3, "Documentation & System":0, "Quality Analysis":4, "Process Control":4, "Communication":3, "Advanced Skill":1}, att: {Absent:0, "Personal Leave":0, "Sick Leave":0, Vacation:0, Late:0} },
+    "Saisamorn J.": { level: "S2", dept: "钣金+注塑", init: "SJ", skills: {"Basic Knowledge":5, "Inspection Skill":5, "Documentation & System":0, "Quality Analysis":4, "Process Control":4, "Communication":3, "Advanced Skill":1}, att: {Absent:0, "Personal Leave":0, "Sick Leave":0, Vacation:0, Late:0} },
+    "Saengravee M.": { level: "S2", dept: "钣金+注塑", init: "SM", skills: {"Basic Knowledge":5, "Inspection Skill":5, "Documentation & System":0, "Quality Analysis":4, "Process Control":4, "Communication":3, "Advanced Skill":1}, att: {Absent:0, "Personal Leave":0, "Sick Leave":0, Vacation:0, Late:0} },
+    "Pornthip P.": { level: "S2", dept: "氦检", init: "PP", skills: {"Basic Knowledge":5, "Inspection Skill":5, "Documentation & System":0, "Quality Analysis":3, "Process Control":4, "Communication":3, "Advanced Skill":0}, att: {Absent:0, "Personal Leave":0, "Sick Leave":0, Vacation:0, Late:0} },
+    "Chavannut N.": { level: "S2", dept: "氦检", init: "CN", skills: {"Basic Knowledge":5, "Inspection Skill":4, "Documentation & System":0, "Quality Analysis":3, "Process Control":4, "Communication":3, "Advanced Skill":0}, att: {Absent:0, "Personal Leave":0, "Sick Leave":0, Vacation:0, Late:0} },
+    "Tanapoom T.": { level: "S2", dept: "氦检", init: "TT", skills: {"Basic Knowledge":5, "Inspection Skill":4, "Documentation & System":0, "Quality Analysis":3, "Process Control":5, "Communication":3, "Advanced Skill":0}, att: {Absent:0, "Personal Leave":0, "Sick Leave":0, Vacation:0, Late:0} },
+    "Lapatsada P.": { level: "S2", dept: "喷粉+附件", init: "LP", skills: {"Basic Knowledge":5, "Inspection Skill":5, "Documentation & System":0, "Quality Analysis":3, "Process Control":5, "Communication":3, "Advanced Skill":1}, att: {Absent:0, "Personal Leave":0, "Sick Leave":0, Vacation:0, Late:0} },
+    "Wanida T.": { level: "S2", dept: "预装+电控", init: "WT", skills: {"Basic Knowledge":5, "Inspection Skill":4, "Documentation & System":0, "Quality Analysis":3, "Process Control":5, "Communication":3, "Advanced Skill":1}, att: {Absent:0, "Personal Leave":0, "Sick Leave":0, Vacation:0, Late:0} },
+    "Anuchit D.": { level: "S2", dept: "预装+喷粉+电控+附件", init: "AD", skills: {"Basic Knowledge":5, "Inspection Skill":5, "Documentation & System":0, "Quality Analysis":3, "Process Control":5, "Communication":3, "Advanced Skill":0}, att: {Absent:0, "Personal Leave":0, "Sick Leave":0, Vacation:0, Late:0} },
+    "Amornrat M.": { level: "H-A", dept: "两器", init: "AM", skills: {"Basic Knowledge":5, "Inspection Skill":4, "Documentation & System":0, "Quality Analysis":3, "Process Control":3, "Communication":3, "Advanced Skill":0}, att: {Absent:0, "Personal Leave":0, "Sick Leave":0, Vacation:0, Late:0} },
+    "Nuttaporn P.": { level: "H-A", dept: "氦检", init: "NP", skills: {"Basic Knowledge":4, "Inspection Skill":4, "Documentation & System":0, "Quality Analysis":3, "Process Control":2, "Communication":3, "Advanced Skill":0}, att: {Absent:0, "Personal Leave":0, "Sick Leave":0, Vacation:0, Late:0} },
+    "Kanyarat P.": { level: "H-A", dept: "两器", init: "KP", skills: {"Basic Knowledge":5, "Inspection Skill":4, "Documentation & System":0, "Quality Analysis":3, "Process Control":2, "Communication":3, "Advanced Skill":0}, att: {Absent:0, "Personal Leave":0, "Sick Leave":0, Vacation:0, Late:0} },
+    "Chanyut C.": { level: "H-C", dept: "氦检", init: "CC", skills: {"Basic Knowledge":4, "Inspection Skill":3, "Documentation & System":0, "Quality Analysis":3, "Process Control":2, "Communication":3, "Advanced Skill":0}, att: {Absent:0, "Personal Leave":0, "Sick Leave":0, Vacation:0, Late:0} },
+    "Sarita Y.": { level: "H-C", dept: "氦检", init: "SY", skills: {"Basic Knowledge":4, "Inspection Skill":3, "Documentation & System":0, "Quality Analysis":3, "Process Control":2, "Communication":3, "Advanced Skill":0}, att: {Absent:0, "Personal Leave":0, "Sick Leave":0, Vacation:0, Late:0} },
+    "Chammary Y.": { level: "H-C", dept: "氦检", init: "CY", skills: {"Basic Knowledge":4, "Inspection Skill":3, "Documentation & System":0, "Quality Analysis":3, "Process Control":2, "Communication":3, "Advanced Skill":0}, att: {Absent:0, "Personal Leave":0, "Sick Leave":0, Vacation:0, Late:0} },
+    "Apinya M.": { level: "H-C", dept: "两器", init: "AM", skills: {"Basic Knowledge":4, "Inspection Skill":3, "Documentation & System":0, "Quality Analysis":3, "Process Control":2, "Communication":3, "Advanced Skill":0}, att: {Absent:0, "Personal Leave":0, "Sick Leave":0, Vacation:0, Late:0} },
+    "Amnourat K.": { level: "H-C", dept: "氦检", init: "AK", skills: {"Basic Knowledge":4, "Inspection Skill":3, "Documentation & System":0, "Quality Analysis":3, "Process Control":2, "Communication":3, "Advanced Skill":0}, att: {Absent:0, "Personal Leave":0, "Sick Leave":0, Vacation:0, Late:0} }
+};
+
 let selected = [];
 let radarChart, barChart, butterflyChart;
 
-const translations = {
-    th: { skills: ["ความรู้พื้นฐาน", "ทักษะการตรวจ", "เอกสาร/ระบบ", "การวิเคราะห์", "คุมกระบวนการ", "สื่อสาร", "ขั้นสูง"], attLabels: ["ขาดงาน", "ลากิจ", "ลาป่วย", "พักร้อน", "มาสาย"] },
-    en: { skills: skillKeys, attLabels: attKeys }
-};
+function setLang(lang) {
+    currentLang = lang;
+    document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+    update();
+}
 
 function init() {
     const saved = localStorage.getItem('hr_pro_portfolio_v7');
-    if(saved) empData = JSON.parse(saved);
+    if(saved) {
+        const parsed = JSON.parse(saved);
+        Object.keys(parsed).forEach(k => { if(!parsed[k].att) parsed[k].att = {Absent:0, "Personal Leave":0, "Sick Leave":0, Vacation:0, Late:0}; });
+        empData = parsed;
+    }
     initCharts();
     renderList();
+    update();
 }
 
 function initCharts() {
-    const textColor = '#FFFFFF';
-    const opt = { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: textColor } } } };
-    
-    radarChart = new Chart(document.getElementById("radarChart"), { 
-        type: 'radar', 
-        data: { labels: translations[currentLang].skills, datasets: [] }, 
-        options: { ...opt, scales: { r: { grid: { color: '#1e293b' }, pointLabels: { color: textColor }, ticks: { display: false } } } } 
-    });
-
-    barChart = new Chart(document.getElementById("barChart"), { 
-        type: 'bar', 
-        data: { labels: translations[currentLang].skills, datasets: [] }, 
-        options: { ...opt, indexAxis: 'y', scales: { x: { ticks: { color: textColor } }, y: { ticks: { color: textColor } } } } 
-    });
-
-    butterflyChart = new Chart(document.getElementById("butterflyChart"), { 
-        type: 'bar', 
-        data: { labels: translations[currentLang].attLabels, datasets: [] }, 
-        options: { ...opt, indexAxis: 'y', scales: { x: { stacked: true }, y: { stacked: true, ticks: { color: textColor } } } } 
-    });
-}
-
-function renderList() {
-    const list = document.getElementById("empList");
-    list.innerHTML = Object.keys(empData).map(name => `
-        <div class="emp-item ${selected.includes(name) ? 'active' : ''}" onclick="toggleSelect('${name}')">
-            <b>${name}</b><br><small>${empData[name].level} | ${empData[name].dept}</small>
-        </div>
-    `).join('');
+    // ปรับ Plugins ให้โชว์ Legend (คำอธิบายสี)
+    const options = { 
+        responsive: true, 
+        maintainAspectRatio: false, 
+        plugins: { 
+            legend: { 
+                display: true, 
+                labels: { color: '#94a3b8', font: { size: 10 } } 
+            } 
+        } 
+    };
+    radarChart = new Chart(document.getElementById("radarChart"), { type: 'radar', data: { labels: [], datasets: [] }, options: { ...options, scales: { r: { min: 0, max: 5, grid: { color: '#1e293b' }, ticks: { display: false } } } } });
+    barChart = new Chart(document.getElementById("barChart"), { type: 'bar', data: { labels: [], datasets: [] }, options: { ...options, indexAxis: 'y', scales: { x: { min: 0, max: 5, grid: { color: '#1e293b' } } } } });
+    butterflyChart = new Chart(document.getElementById("butterflyChart"), { type: 'bar', data: { labels: [], datasets: [] }, options: { ...options, indexAxis: 'y', scales: { x: { stacked: true, grid: { display: false } }, y: { stacked: true, position: 'center' } } } });
 }
 
 function toggleSelect(name) {
     if(selected.includes(name)) selected = selected.filter(x => x !== name);
-    else if(selected.length < 2) selected.push(name);
-    renderList(); updateUI();
+    else if(selected.length < 3) selected.push(name); // ปรับจาก 2 เป็น 3
+    renderList(); update();
 }
 
-function updateUI() {
+function update() {
     const t = translations[currentLang];
-    const ds = selected.map((n, i) => ({
+    document.getElementById("side-title").innerText = t.sideTitle;
+    document.getElementById("lbl-compare").innerText = t.compare;
+    document.getElementById("lbl-topSkill").innerText = t.topSkill;
+    document.getElementById("lbl-discipline").innerText = t.discipline;
+    document.getElementById("lbl-skillMatrix").innerText = t.skillMatrix;
+    document.getElementById("lbl-attMatrix").innerText = t.attMatrix;
+
+    const displays = document.getElementById("profileDisplays");
+    if(selected.length > 0) {
+        displays.innerHTML = selected.map((n, i) => `
+            <div style="text-align:center; min-width:80px;">
+                <div class="profile-circle" style="border-color: ${chartColors[i]}">${empData[n].img ? `<img src="${empData[n].img}">` : `<b>${empData[n].init}</b>`}</div>
+                <div style="font-size:12px; font-weight:bold; color:${chartColors[i]};">${n}</div>
+            </div>`).join('');
+    } else { 
+        displays.innerHTML = `<p style="color: var(--text-secondary);">เลือกพนักงาน (สูงสุด 3 คน)</p>`; 
+    }
+
+    // กราฟ Radar
+    radarChart.data.labels = t.skills;
+    radarChart.data.datasets = selected.map((n, i) => ({
         label: n, data: skillKeys.map(s => empData[n].skills[s] || 0),
-        borderColor: i === 0 ? '#38bdf8' : '#fb7185', backgroundColor: i === 0 ? 'rgba(56, 189, 248, 0.2)' : 'rgba(251, 113, 133, 0.2)'
+        borderColor: chartColors[i], backgroundColor: chartFills[i], borderWidth: 2
     }));
-    radarChart.data.datasets = ds; radarChart.update();
-    barChart.data.datasets = ds; barChart.update();
+    radarChart.update();
     
-    renderTable();
+    // กราฟ Bar
+    barChart.data.labels = t.skills;
+    barChart.data.datasets = selected.map((n, i) => ({
+        label: n, data: skillKeys.map(s => empData[n].skills[s] || 0),
+        backgroundColor: chartColors[i]
+    }));
+    barChart.update();
+
+    // กราฟ Butterfly/Stack (ปรับปรุงให้รองรับ 3 คน)
+    butterflyChart.data.labels = t.attLabels;
+    butterflyChart.data.datasets = selected.map((n, i) => ({
+        label: n, 
+        data: attKeys.map(a => {
+            let val = empData[n].att[a]||0;
+            return i === 0 ? -val : val; // คนที่ 1 ไปซ้าย, คนที่เหลือไปขวา
+        }),
+        backgroundColor: chartColors[i]
+    }));
+    butterflyChart.update();
+
+    renderTable(); renderAttTable(); renderRankings();
 }
 
 function renderTable() {
+    const t = translations[currentLang];
     const area = document.getElementById("tableArea");
-    if(!selected.length) return area.innerHTML = "";
-    let html = `<table><tr><th>Skill</th>` + selected.map(n => `<th>${n}</th>`).join('') + `</tr>`;
+    if(selected.length === 0) { area.innerHTML = "<p style='text-align:center; opacity:0.5;'>เลือกพนักงาน...</p>"; return; }
+    let html = `<table><thead><tr><th>Skill</th>` + selected.map((n, i) => `<th style="color:${chartColors[i]}">${n}</th>`).join('') + `</tr></thead><tbody>`;
     skillKeys.forEach((s, idx) => {
-        html += `<tr><td>${translations[currentLang].skills[idx]}</td>` + 
-        selected.map(n => `<td><input type="number" class="input-num" value="${empData[n].skills[s]||0}" onchange="empData['${n}'].skills['${s}']=parseFloat(this.value); saveData(); updateUI();"></td>`).join('') + `</tr>`;
+        html += `<tr><td style="text-align:left">${t.skills[idx]}</td>` + selected.map(n => `<td><input type="number" class="input-num" min="0" max="5" value="${empData[n].skills[s]||0}" onchange="empData['${n}'].skills['${s}']=parseFloat(this.value); update()"></td>`).join('') + `</tr>`;
     });
-    area.innerHTML = html + `</table>`;
+    area.innerHTML = html + `</tbody></table>`;
 }
 
-function addEmployee() {
-    const name = prompt("ชื่อพนักงาน:");
-    if(name) {
-        empData[name] = { level: "-", dept: "-", skills: {}, att: {}, init: name.charAt(0) };
-        renderList();
-    }
+function renderAttTable() {
+    const t = translations[currentLang];
+    const area = document.getElementById("attTableArea");
+    if(selected.length === 0) { area.innerHTML = ""; return; }
+    let html = `<table><thead><tr><th>Metric</th>` + selected.map((n, i) => `<th style="color:${chartColors[i]}">${n}</th>`).join('') + `</tr></thead><tbody>`;
+    attKeys.forEach((a, idx) => {
+        html += `<tr><td style="text-align:left">${t.attLabels[idx]}</td>` + selected.map(n => `<td><input type="number" class="input-num" min="0" value="${empData[n].att[a]||0}" onchange="empData['${n}'].att['${a}']=parseFloat(this.value); update()"></td>`).join('') + `</tr>`;
+    });
+    area.innerHTML = html + `</tbody></table>`;
 }
 
-function saveData() { localStorage.setItem('hr_pro_portfolio_v7', JSON.stringify(empData)); }
+function renderRankings() {
+    const all = Object.keys(empData).map(n => ({ name: n, avg: (skillKeys.reduce((a, s) => a + (empData[n].skills[s] || 0), 0) / skillKeys.length).toFixed(2) })).sort((a,b) => b.avg - a.avg);
+    document.getElementById("rankSkillArea").innerHTML = all.slice(0, 5).map((r, i) => `<div style="display:flex; justify-content:space-between; padding:5px; border-bottom:1px solid #1e293b; font-size:12px;"><span>#${i+1} ${r.name}</span> <b style="color:var(--accent-green)">${r.avg}</b></div>`).join('');
+}
+
+function toggleEdit(name, event) {
+    event.stopPropagation();
+    const box = document.getElementById(`edit-box-${name.replace(/\s/g, '')}`);
+    box.style.display = box.style.display === 'block' ? 'none' : 'block';
+}
+
+function updateEmpMeta(oldName, field, newVal) {
+    if(field === 'name' && newVal && newVal !== oldName) {
+        empData[newVal] = empData[oldName]; delete empData[oldName];
+        selected = selected.map(s => s === oldName ? newVal : s);
+    } else { empData[oldName][field] = newVal; }
+    renderList(); update();
+}
+
+function renderList() {
+    const list = document.getElementById("empList");
+    list.innerHTML = Object.keys(empData).map(name => {
+        const id = name.replace(/\s/g, '');
+        const isSel = selected.includes(name);
+        const selIdx = selected.indexOf(name);
+        return `<div class="emp-item ${isSel ? 'active' : ''}" onclick="toggleSelect('${name}')" style="${isSel ? 'border-color:' + chartColors[selIdx] : ''}">
+            <span class="setting-icon" onclick="toggleEdit('${name}', event)">⚙️</span>
+            <b>${name}</b><br><small>${empData[name].level} | ${empData[name].dept}</small>
+            <div class="edit-mode-box" id="edit-box-${id}" onclick="event.stopPropagation()">
+                <input type="text" value="${name}" onchange="updateEmpMeta('${name}', 'name', this.value)">
+                <input type="text" value="${empData[name].level}" onchange="updateEmpMeta('${name}', 'level', this.value)">
+                <input type="text" value="${empData[name].dept}" onchange="updateEmpMeta('${name}', 'dept', this.value)">
+                <button style="width:100%; margin-top:5px; background:var(--accent-blue); border:none; color:white; border-radius:4px; font-size:10px; padding:5px;" onclick="triggerImg('${name}')">📷 เปลี่ยนรูป</button>
+                <button style="width:100%; margin-top:5px; background:var(--accent-rose); border:none; color:white; border-radius:4px; font-size:10px; padding:5px;" onclick="deleteEmp('${name}')">ลบพนักงาน</button>
+            </div></div>`;
+    }).join('');
+}
+
+function triggerImg(name) { currentTargetImg = name; document.getElementById("imgUpload").click(); }
+function handleImage(input) { if(input.files && input.files[0]) { const reader = new FileReader(); reader.onload = function(e) { empData[currentTargetImg].img = e.target.result; update(); }; reader.readAsDataURL(input.files[0]); } }
+function addEmployee() { const name = prompt("ระบุชื่อพนักงาน:"); if(name && !empData[name]) { empData[name] = { level: "New", dept: "General", init: name.substring(0,2).toUpperCase(), skills: {}, att: {Absent:0, "Personal Leave":0, "Sick Leave":0, Vacation:0, Late:0} }; renderList(); } }
+function deleteEmp(name) { if(confirm(`ยืนยันการลบ ${name}?`)) { delete empData[name]; selected = selected.filter(s => s !== name); renderList(); update(); } }
+function saveData() { localStorage.setItem('hr_pro_portfolio_v7', JSON.stringify(empData)); alert("✅ บันทึกเรียบร้อย"); }
 
 window.onload = init;
 </script>
