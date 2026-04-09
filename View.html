@@ -3,173 +3,146 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Staff Analytics - Skills Matrix</title>
+    <title>Employee View - Skills Matrix</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --bg-body: #020617; --bg-card: #0f172a; --accent-blue: #38bdf8;
-            --accent-green: #4ade80; --accent-rose: #fb7185; --accent-warn: #fbbf24;
-            --accent-purple: #a855f7;
             --text-primary: #f8fafc; --text-secondary: #94a3b8; --border: #1e293b;
         }
-        * { box-sizing: border-box; font-family: 'Inter', 'Sarabun', 'Microsoft YaHei', sans-serif; }
+        * { box-sizing: border-box; font-family: 'Inter', 'Sarabun', sans-serif; }
         
         body { 
-            margin: 0; 
-            background-color: var(--bg-body); 
-            color: var(--text-primary); 
-            display: flex; 
-            height: 100vh; 
-            overflow: hidden; 
+            margin: 0; background-color: var(--bg-body); color: var(--text-primary);
+            display: flex; flex-direction: column; min-height: 100vh; overflow-x: hidden;
         }
 
-        .sidebar { 
-            width: 320px; 
-            background: #020617; 
-            border-right: 1px solid var(--border); 
-            padding: 15px; 
-            display: flex; 
-            flex-direction: column; 
-            flex-shrink: 0; 
-            height: 100%;
-        }
+        /* --- ปรับแต่ง Layout ให้ลื่นไหลทั้งคอมและมือถือ --- */
+        .container { padding: 15px; display: flex; flex-direction: column; gap: 15px; width: 100%; max-width: 1400px; margin: 0 auto; }
 
-        .main-content { 
-            flex: 1; 
-            padding: 20px; 
-            overflow-y: auto; 
-            display: flex; 
-            flex-direction: column; 
-            gap: 20px; 
-            height: 100%;
-        }
+        .header-section { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; }
+        .lang-bar { display: flex; gap: 8px; }
+        .lang-btn { background: var(--bg-card); border: 1px solid var(--border); color: white; padding: 5px 12px; border-radius: 6px; cursor: pointer; }
 
-        /* --- จุดที่เพิ่ม: ทำให้ดูในมือถือได้ (Responsive) --- */
-        @media (max-width: 768px) {
-            body { flex-direction: column; height: auto; overflow-y: auto; }
-            .sidebar { width: 100%; height: auto; border-right: none; border-bottom: 1px solid var(--border); }
-            .main-content { height: auto; overflow: visible; padding: 10px; }
-            .top-row { grid-template-columns: 1fr !important; min-height: auto; }
-            .top-row .card { height: 350px; }
-            div[style*="grid-template-columns: 1.2fr 1.8fr"] { grid-template-columns: 1fr !important; }
-            .table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-        }
-
-        .lang-bar { display: flex; gap: 5px; margin-bottom: 10px; }
-        .lang-btn { background: var(--bg-card); border: 1px solid var(--border); color: var(--text-secondary); padding: 4px 8px; border-radius: 5px; cursor: pointer; font-size: 11px; }
-        .lang-btn.active { border-color: var(--accent-blue); color: var(--accent-blue); }
+        /* การจัดเรียงกราฟ */
+        .grid-charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; }
         
-        .emp-list-container { flex: 1; overflow-y: auto; margin: 15px 0; padding-right: 5px; }
-        .emp-item { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 10px; padding: 10px; margin-bottom: 8px; cursor: pointer; transition: 0.2s; position: relative; }
-        .emp-item.active { border-color: var(--accent-blue); background: rgba(56, 189, 248, 0.1); }
-        
-        .top-row { 
-            display: grid; 
-            grid-template-columns: 1fr 1.5fr 1.5fr; 
-            gap: 15px; 
-            min-height: 320px; 
-        }
-
         .card { 
-            background: var(--bg-card); 
-            border-radius: 12px; 
-            border: 1px solid var(--border); 
-            padding: 15px; 
-            position: relative; 
-            display: flex;
-            flex-direction: column;
+            background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border); 
+            padding: 20px; display: flex; flex-direction: column; min-height: 350px;
         }
 
-        .profile-circle { width: 65px; height: 65px; border-radius: 50%; border: 3px solid var(--accent-blue); overflow: hidden; margin: 0 auto 5px; background: #000; display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; }
-        .profile-circle img { width: 100%; height: 100%; object-fit: cover; }
-        
-        .table-container { overflow-x: auto; width: 100%; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 10px; text-align: center; border-bottom: 1px solid var(--border); font-size: 12px; }
-        
-        .input-num { width: 50px; background: #020617; border: 1px solid var(--border); color: white; padding: 4px; border-radius: 5px; text-align: center; }
-        .btn { padding: 8px 15px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; transition: 0.2s; }
-        .btn-add { background: rgba(56, 189, 248, 0.1); color: var(--accent-blue); border: 1px dashed var(--accent-blue); width: 100%; margin-bottom: 10px; }
-        .btn-save { background: var(--accent-green); color: #020617; width: 100%; margin-top: auto; }
-        
-        canvas { max-height: 250px !important; width: 100% !important; }
+        .card h4 { margin-top: 0; color: #FFFFFF; font-size: 1.1rem; border-left: 4px solid var(--accent-blue); padding-left: 10px; }
+
+        .table-container { overflow-x: auto; margin-top: 10px; width: 100%; }
+        table { width: 100%; border-collapse: collapse; min-width: 500px; }
+        th, td { padding: 12px; text-align: center; border-bottom: 1px solid var(--border); color: white; }
+
+        /* ปรับปรุงให้แสดงผลในมือถือ (Responsive) */
+        @media (max-width: 768px) {
+            .grid-charts { grid-template-columns: 1fr; }
+            .card { min-height: 300px; padding: 15px; }
+            .container { padding: 10px; }
+        }
+
+        footer { text-align: center; padding: 20px; color: var(--text-secondary); font-size: 12px; }
     </style>
 </head>
 <body>
 
-<div class="sidebar">
-    <div id="side-title" style="font-size: 1.2rem; font-weight: 800; color: #FFFFFF; margin-bottom: 15px;">PQC SKILLS VIEW</div>
-    <div class="emp-list-container" id="empList"></div>
-    <button class="btn btn-save" onclick="saveData()">💾 บันทึกข้อมูล</button>
-</div>
-
-<div class="main-content">
-    <div class="top-row">
-        <div class="card" style="text-align: center;">
-            <div id="profileDisplays" style="display:flex; justify-content:center; gap:10px; flex-wrap: wrap; flex: 1; align-items: center;">
-                <p style="color: #FFFFFF;">เลือกพนักงาน</p>
-            </div>
-            <h4 id="lbl-compare" style="margin-top: 10px; font-size: 14px; color: #FFFFFF;">เปรียบเทียบพนักงาน</h4>
+<div class="container">
+    <div class="header-section">
+        <h2 style="color: var(--accent-blue); margin: 0;">ข้อมูลทักษะพนักงาน</h2>
+        <div class="lang-bar">
+            <button class="lang-btn" onclick="setLang('th')">TH</button>
+            <button class="lang-btn" onclick="setLang('en')">EN</button>
         </div>
-        <div class="card"><canvas id="radarChart"></canvas></div>
-        <div class="card"><canvas id="barChart"></canvas></div>
+    </div>
+
+    <div class="grid-charts">
+        <div class="card">
+            <h4>📊 Skills Radar Chart</h4>
+            <div style="flex:1;"><canvas id="radarChart"></canvas></div>
+        </div>
+        <div class="card">
+            <h4>📈 Skills Bar Chart</h4>
+            <div style="flex:1;"><canvas id="barChart"></canvas></div>
+        </div>
     </div>
 
     <div class="card">
-        <h4 style="color: #FFFFFF;">📊 Skill Matrix</h4>
-        <div class="table-container" id="tableArea"></div>
+        <h4>📋 Skill Matrix Table</h4>
+        <div class="table-container" id="tableArea">
+            </div>
     </div>
 </div>
 
-<script>
-    // ส่วนจำลองข้อมูลพนักงาน (ใช้ข้อมูลเดิมของคุณ)
-    let empData = { /* ข้อมูลเดิมของคุณ */ };
-    let selected = [];
+<footer>© 2026 Haier Thailand PQC Team</footer>
 
-    // --- จุดที่แก้: ทำให้ตัวหนังสือในกราฟเป็นสีขาว ---
+<script>
+    // ส่วนนี้คือการตั้งค่าให้ตัวหนังสือในกราฟเป็นสีขาวทั้งหมด
+    const chartTextColor = '#FFFFFF';
+    let radarChart, barChart;
+
     function initCharts() {
-        const textColor = '#FFFFFF';
         const commonOptions = {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: { labels: { color: textColor } }
+                legend: { labels: { color: chartTextColor, font: { size: 12 } } }
             }
         };
 
+        // กราฟเรดาร์
         radarChart = new Chart(document.getElementById("radarChart"), {
             type: 'radar',
-            data: { labels: ["Knowledge", "Skill", "System", "Analysis", "Control", "Comm", "Advanced"], datasets: [] },
+            data: { 
+                labels: ["ความรู้พื้นฐาน", "ทักษะการตรวจ", "เอกสาร/ระบบ", "การวิเคราะห์", "คุมกระบวนการ", "สื่อสาร", "ขั้นสูง"],
+                datasets: [] 
+            },
             options: {
                 ...commonOptions,
                 scales: {
                     r: {
-                        grid: { color: '#1e293b' },
-                        pointLabels: { color: textColor, font: { size: 12 } },
+                        grid: { color: '#334155' },
+                        angleLines: { color: '#334155' },
+                        pointLabels: { color: chartTextColor, font: { size: 12 } },
                         ticks: { display: false }
                     }
                 }
             }
         });
 
+        // กราฟแท่ง
         barChart = new Chart(document.getElementById("barChart"), {
             type: 'bar',
-            data: { labels: ["Knowledge", "Skill", "System", "Analysis", "Control", "Comm", "Advanced"], datasets: [] },
+            data: { 
+                labels: ["ความรู้พื้นฐาน", "ทักษะการตรวจ", "เอกสาร/ระบบ", "การวิเคราะห์", "คุมกระบวนการ", "สื่อสาร", "ขั้นสูง"],
+                datasets: [] 
+            },
             options: {
                 ...commonOptions,
                 indexAxis: 'y',
                 scales: {
-                    x: { ticks: { color: textColor }, grid: { color: '#1e293b' } },
-                    y: { ticks: { color: textColor } }
+                    x: { ticks: { color: chartTextColor }, grid: { color: '#1e293b' } },
+                    y: { ticks: { color: chartTextColor } }
                 }
             }
         });
     }
 
-    // ฟังก์ชันการทำงานอื่นๆ ของคุณคงเดิมทั้งหมด
+    // ฟังก์ชันดึงข้อมูลพนักงานจาก LocalStorage (ที่เซฟมาจากหน้าหลัก)
+    function loadData() {
+        const saved = localStorage.getItem('hr_pro_portfolio_v7');
+        if(saved) {
+            // เขียน logic แสดงผลข้อมูลตามที่คุณเคยทำไว้
+            console.log("Data loaded");
+        }
+    }
+
     window.onload = () => {
         initCharts();
-        // เรียก render ต่างๆ ตามโค้ดเดิมของคุณ
+        loadData();
     };
 </script>
 </body>
